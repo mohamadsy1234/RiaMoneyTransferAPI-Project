@@ -11,6 +11,11 @@ namespace RiaMoneyTransferAPI
 
             // Add services to the container.
             builder.Services.AddSingleton<IUserService, UserService>();
+            builder.Services.AddHttpClient();
+            builder.Services.AddScoped<IOrderTrackingService, OrderTrackingService>();
+            builder.Services.Configure<RiaMoneyTransferAPI.Model.PartnerApiOptions>(
+                builder.Configuration.GetSection(RiaMoneyTransferAPI.Model.PartnerApiOptions.SectionName));
+            builder.Services.AddScoped<IPartnerOrderService, PartnerOrderService>();
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
