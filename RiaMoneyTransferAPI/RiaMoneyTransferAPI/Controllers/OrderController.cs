@@ -28,7 +28,7 @@ namespace RiaMoneyTransferAPI.Controllers
             }
 
             var request = new OrderTrackingRequest { OrderNumber = orderNumber };
-            var result = await _orderTrackingService.TrackOrderAsync(request, cancellationToken);
+            var result = await _orderTrackingService.TrackOrderAsync(request, GetCallerToken(), cancellationToken);
 
             return result.Success ? Ok(result) : StatusCode(StatusCodes.Status502BadGateway, result);
         }
@@ -45,9 +45,21 @@ namespace RiaMoneyTransferAPI.Controllers
                 return BadRequest("Order number is required.");
             }
 
-            var result = await _orderTrackingService.TrackOrderAsync(request, cancellationToken);
+            var result = await _orderTrackingService.TrackOrderAsync(request, GetCallerToken(), cancellationToken);
 
             return result.Success ? Ok(result) : StatusCode(StatusCodes.Status502BadGateway, result);
+        }
+
+        /// <summary>
+        /// Reads an optional caller-supplied Ria bearer token from the
+        /// <c>X-Ria-Auth-Token</c> header, so an authenticated session can be
+        /// forwarded. Returns null when absent, in which case the service falls
+        /// back to the anonymous public session token.
+        /// </summary>
+        private string? GetCallerToken()
+        {
+            var token = Request.Headers["X-Ria-Auth-Token"].ToString();
+            return string.IsNullOrWhiteSpace(token) ? null : token;
         }
     }
 }

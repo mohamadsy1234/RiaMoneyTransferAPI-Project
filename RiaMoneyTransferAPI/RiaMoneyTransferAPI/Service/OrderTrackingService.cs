@@ -33,7 +33,7 @@ namespace RiaMoneyTransferAPI.Service
             _logger = logger;
         }
 
-        public async Task<OrderTrackingResult> TrackOrderAsync(OrderTrackingRequest request, CancellationToken cancellationToken = default)
+        public async Task<OrderTrackingResult> TrackOrderAsync(OrderTrackingRequest request, string? authToken = null, CancellationToken cancellationToken = default)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.OrderNumber))
             {
@@ -43,14 +43,24 @@ namespace RiaMoneyTransferAPI.Service
             var client = _httpClientFactory.CreateClient();
 
             string jwt;
-            try
+            if (!string.IsNullOrWhiteSpace(authToken))
             {
-                jwt = await GetSessionTokenAsync(client, cancellationToken);
+                // Caller supplied their own bearer token; use it directly.
+                jwt = authToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                    ? authToken.Substring("Bearer ".Length).Trim()
+                    : authToken.Trim();
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Failed to obtain Ria public session token.");
-                return OrderTrackingResult.Failure(request.OrderNumber, "Could not obtain a session token from Ria.");
+                try
+                {
+                    jwt = await GetSessionTokenAsync(client, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to obtain Ria public session token.");
+                    return OrderTrackingResult.Failure(request.OrderNumber, "Could not obtain a session token from Ria.");
+                }
             }
 
             if (string.IsNullOrWhiteSpace(jwt) || jwt.Contains(".."))

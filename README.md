@@ -10,6 +10,12 @@ Mirrors the public Ria tracking flow (session JWT → tracking status):
 | GET | `/api/Order/track/{orderNumber}` | Track a transfer by order number / PIN |
 | POST | `/api/Order/track` | Track with a full body (`OrderNumber`, `GetEventDetails`, `GetEta`) |
 
+By default the service obtains an anonymous public session token. Ria's
+endpoint rejects anonymous tokens for most order lookups (HTTP 403), so to
+track an order that requires authorization, forward your own authenticated
+Ria token via the `X-Ria-Auth-Token` header (with or without a `Bearer`
+prefix); it is used in place of the anonymous token.
+
 ## Partner / Wholesale API (rialink.net)
 
 Proxies the Ria Partner API. Requests carry the `ria-AgentId` and
